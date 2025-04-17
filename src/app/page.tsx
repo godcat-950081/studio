@@ -1,15 +1,17 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Upload } from 'lucide-react';
+import ReactECharts from 'echarts-for-react';
+import * as echarts from 'echarts';
 
-const Chart = dynamic(() => import('recharts').then(mod => mod.PieChart), {
+const PieChart = dynamic(() => import('recharts').then(mod => mod.PieChart), {
   ssr: false,
 });
 const Pie = dynamic(() => import('recharts').then(mod => mod.Pie), {
@@ -21,10 +23,47 @@ const Cell = dynamic(() => import('recharts').then(mod => mod.Cell), {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#800080'];
 
+const initialData = [
+  { name: 'Category A', value: 400 },
+  { name: 'Category B', value: 300 },
+  { name: 'Category C', value: 200 },
+  { name: 'Category D', value: 100 },
+];
+
+const initialBarChartOption: echarts.EChartsOption = {
+  xAxis: {
+    type: 'category',
+    data: initialData.map(item => item.name),
+    axisLabel: {
+      color: '#9ca3af' // Muted foreground color
+    },
+  },
+  yAxis: {
+    type: 'value',
+    axisLabel: {
+      color: '#9ca3af' // Muted foreground color
+    },
+  },
+  series: [
+    {
+      data: initialData.map(item => item.value),
+      type: 'bar',
+      itemStyle: {
+        color: '#008080' // Accent color
+      }
+    }
+  ],
+  backgroundColor: 'transparent', // Make background transparent
+  textStyle: {
+    color: '#9ca3af' // Muted foreground color for all text
+  },
+};
+
 export default function Home() {
   const [data, setData] = useState<string>('');
   const [chartType, setChartType] = useState<string>('pie');
   const [chartData, setChartData] = useState<any[]>([]);
+  const chartRef = useRef<ReactECharts | null>(null);
 
   const parseData = useCallback(() => {
     try {
@@ -73,7 +112,7 @@ export default function Home() {
   const renderChart = () => {
     if (chartType === 'pie' && chartData.length > 0) {
       return (
-        <Chart width={400} height={400}>
+        <PieChart width={400} height={400}>
           <Pie
             dataKey="value"
             isAnimationActive={false}
@@ -90,19 +129,36 @@ export default function Home() {
               ))
             }
           </Pie>
-        </Chart>
+        </PieChart>
       );
     }
     return <div>No chart available for the selected data and chart type.</div>;
   };
 
+  const handleDownload = () => {
+    if (chartRef.current) {
+      const chartInstance = chartRef.current.getEchartsInstance();
+      const dataURL = chartInstance.getDataURL({
+        type: 'png',
+        pixelRatio: 2,
+        backgroundColor: '#141a1f'
+      });
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = 'bar_chart.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div className="flex h-screen w-full">
       {/* Data Input Section */}
-      <div className="w-1/2 p-4">
+      <div className="w-1/4 p-4">
         <Textarea
           placeholder="Paste CSV or JSON data here..."
-          className="mb-4 h-[60vh] resize-none"
+          className="mb-4 h-[60vh] resize-none w-full"
           value={data}
           onChange={(e) => setData(e.target.value)}
         />
@@ -113,15 +169,15 @@ export default function Home() {
             className="hidden"
             onChange={handleFileChange}
           />
-          <label htmlFor="file-upload">
-            <Button variant="secondary" asChild>
-              <span className="flex items-center"><Upload className="w-4 h-4 mr-2" /> Upload File</span>
+          <label htmlFor="file-upload" className="w-full">
+            <Button variant="secondary" asChild className="w-full">
+              <span className="flex items-center justify-center"><Upload className="w-4 h-4 mr-2" /> Upload File</span>
             </Button>
           </label>
         </div>
 
-        <Select onValueChange={setChartType} defaultValue={chartType}>
-          <SelectTrigger className="w-[200px]">
+        <Select onValueChange={setChartType} defaultValue={chartType} className="w-full">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select chart type" />
           </SelectTrigger>
           <SelectContent>
@@ -129,12 +185,23 @@ export default function Home() {
             {/* Add more chart types here */}
           </SelectContent>
         </Select>
-        <Button className="mt-4" onClick={parseData}>Refresh Chart</Button>
+        <div className="flex justify-center mt-4">
+          <Button className="w-1/2" onClick={parseData}>Generate</Button>
+        </div>
       </div>
 
       {/* Chart Preview Section */}
-      <div className="w-1/2 p-4 flex items-center justify-center">
+      <div className="w-3/4 p-4 flex flex-col items-center justify-start">
         {renderChart()}
+        {/* eCharts Bar Chart */}
+        <ReactECharts
+          ref={chartRef}
+          option={initialBarChartOption}
+          style={{ height: '500px', width: '100%' }}
+        />
+        <Button onClick={handleDownload}>
+          Export as PNG
+        </Button>
       </div>
     </div>
   );
