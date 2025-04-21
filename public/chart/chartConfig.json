@@ -1,24 +1,44 @@
 {
+  "title": {
+    "text": "Item Counts",
+    "left": "center",
+    "textStyle": {
+      "fontSize": 16
+    }
+  },
+  "tooltip": {
+    "trigger": "axis",
+    "axisPointer": {
+      "type": "shadow"
+    }
+  },
+  "grid": {
+    "left": "10%",
+    "right": "10%",
+    "bottom": "10%",
+    "containLabel": true
+  },
   "xAxis": {
     "type": "category",
-    "data": ["03-01", "03-02", "03-03", "03-04", "03-05", "03-06", "03-07"]
+    "data": ["A", "B", "C"],
+    "axisLabel": {
+      "fontSize": 14
+    }
   },
   "yAxis": {
     "type": "value",
-    "name": "UV/次"
+    "name": "Count",
+    "axisLabel": {
+      "fontSize": 14
+    }
   },
   "series": [
     {
-      "data": [450, 620, 800, 750, 920, 870, 1100],
-      "type": "line",
-      "smooth": true,
-      "symbol": "circle",
-      "symbolSize": 8,
-      "lineStyle": {
-        "width": 3
-      },
-      "tooltip": {
-        "show": true
+      "name": "Count",
+      "type": "bar",
+      "data": [20, 25, 30],
+      "itemStyle": {
+        "color": "#5470C6"
       }
     }
   ]
