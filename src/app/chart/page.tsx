@@ -1,48 +1,44 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
-import * as echarts from 'echarts';
 import { Button } from "@/components/ui/button";
 
-const initialData = [
-  { name: 'Category A', value: 400 },
-  { name: 'Category B', value: 300 },
-  { name: 'Category C', value: 200 },
-  { name: 'Category D', value: 100 },
-];
 
-const initialBarChartOption: echarts.EChartsOption = {
-  xAxis: {
-    type: 'category',
-    data: initialData.map(item => item.name),
-    axisLabel: {
-      color: '#9ca3af' // Muted foreground color
-    },
-  },
-  yAxis: {
-    type: 'value',
-    axisLabel: {
-      color: '#9ca3af' // Muted foreground color
-    },
-  },
-  series: [
-    {
-      data: initialData.map(item => item.value),
-      type: 'bar',
-      itemStyle: {
-        color: '#008080' // Accent color
-      }
-    }
-  ],
-  backgroundColor: 'transparent', // Make background transparent
-  textStyle: {
-    color: '#9ca3af' // Muted foreground color for all text
-  },
+
+interface SeriesConfig {
+  type: string;
+  [key: string]: any;
+};
+interface ChartConfig extends echarts.EChartsOption {
+  series: SeriesConfig[];
 };
 
+const fetchChartConfig = async (): Promise<ChartConfig> => {
+    try {
+      const response = await fetch('chart/chartConfig.json');
+      console.log(response.status)
+      if (!response.ok) {
+        throw new Error('Failed to fetch chart configuration from /app/chart/chartConfig.json');
+      }
+      return response.json();
+    } catch (error) {
+        console.error('fetchChartConfig error:', error);
+        throw error;
+      }
+};
 export default function ChartPage() {
   const chartRef = useRef<ReactECharts | null>(null);
+  const [chartOption, setChartOption] = useState<any>(null);
+
+  useEffect(() => {
+    fetchChartConfig().then(config => {
+        const options = generateChartOptions(config)
+        setChartOption(options)
+    }).catch(error => {
+        console.error('Error fetching chart configuration:', error);
+    });
+  }, [])
 
   const handleDownload = () => {
     if (chartRef.current) {
@@ -61,14 +57,22 @@ export default function ChartPage() {
     }
   };
 
+  const generateChartOptions = (config: ChartConfig): echarts.EChartsOption => {
+    
+    return {
+      ...config,
+      
+    };
+  }
+
+  
   return (
     <div className="flex flex-col items-center justify-start">
-      {/* eCharts Bar Chart */}
-      <ReactECharts
+      {chartOption && <ReactECharts
         ref={chartRef}
-        option={initialBarChartOption}
+        option={chartOption}
         style={{ height: '500px', width: '100%' }}
-      />
+      />}
       <Button onClick={handleDownload}>
         Export as PNG
       </Button>

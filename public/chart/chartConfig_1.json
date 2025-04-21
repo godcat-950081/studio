@@ -1,0 +1,42 @@
+{
+  "title": {
+    "text": "2024年中国人口年龄分布",
+    "textStyle": {
+      "fontSize": 16
+    },
+    "left": "center"
+  },
+  "tooltip": {
+    "trigger": "item",
+    "formatter": "{a} <br/>{b}: {c} 万人 ({d}%)"
+  },
+  "legend": {
+    "orient": "vertical",
+    "left": "left",
+    "textStyle": {
+      "fontSize": 14
+    }
+  },
+  "series": [
+    {
+      "name": "人口年龄分布",
+      "type": "pie",
+      "radius": "50%",
+      "center": [
+        "50%",
+        "50%"
+      ],
+      "data": [
+        { "value": 85798, "name": "16-59岁" },
+        { "value": 31031, "name": "60岁及以上" },
+        { "value": 24000, "name": "0-15岁" }
+      ],
+      "itemStyle": {
+        "emphasis": {
+          "shadowBlur": 10,
+          "shadowColor": "rgba(0, 0, 0, 0.5)"
+        }
+      }
+    }
+  ]
+}
