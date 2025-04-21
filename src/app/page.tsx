@@ -1,81 +1,28 @@
-
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Upload } from 'lucide-react';
-import ReactECharts from 'echarts-for-react';
-import * as echarts from 'echarts';
-
-const PieChart = dynamic(() => import('recharts').then(mod => mod.PieChart), {
-  ssr: false,
-});
-const Pie = dynamic(() => import('recharts').then(mod => mod.Pie), {
-  ssr: false,
-});
-const Cell = dynamic(() => import('recharts').then(mod => mod.Cell), {
-  ssr: false,
-});
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#800080'];
-
-const initialData = [
-  { name: 'Category A', value: 400 },
-  { name: 'Category B', value: 300 },
-  { name: 'Category C', value: 200 },
-  { name: 'Category D', value: 100 },
-];
-
-const initialBarChartOption: echarts.EChartsOption = {
-  xAxis: {
-    type: 'category',
-    data: initialData.map(item => item.name),
-    axisLabel: {
-      color: '#9ca3af' // Muted foreground color
-    },
-  },
-  yAxis: {
-    type: 'value',
-    axisLabel: {
-      color: '#9ca3af' // Muted foreground color
-    },
-  },
-  series: [
-    {
-      data: initialData.map(item => item.value),
-      type: 'bar',
-      itemStyle: {
-        color: '#008080' // Accent color
-      }
-    }
-  ],
-  backgroundColor: 'transparent', // Make background transparent
-  textStyle: {
-    color: '#9ca3af' // Muted foreground color for all text
-  },
-};
 
 export default function Home() {
   const [data, setData] = useState<string>('');
   const [chartType, setChartType] = useState<string>('pie');
-  const [chartData, setChartData] = useState<any[]>([]);
-  const chartRef = useRef<ReactECharts | null>(null);
 
   const parseData = useCallback(() => {
     try {
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed)) {
-        setChartData(parsed);
+        // Handle array data
+        console.log("Parsed Array Data:", parsed);
       } else if (typeof parsed === 'object') {
-        // Transform object to array of key-value pairs
-        const arrayData = Object.entries(parsed).map(([name, value]) => ({ name, value: Number(value) }));
-        setChartData(arrayData);
+        // Handle object data
+        console.log("Parsed Object Data:", parsed);
       } else {
-        setChartData([{ name: 'Data', value: Number(parsed) }]);
+        // Handle single value data
+        console.log("Parsed Single Value Data:", parsed);
       }
     } catch (e) {
       try {
@@ -89,7 +36,7 @@ export default function Home() {
             return obj;
           }, {});
         });
-        setChartData(parsedData);
+        console.log("Parsed CSV Data:", parsedData);
       } catch (csvError) {
         alert('Error parsing data. Please ensure it is valid JSON or CSV.');
         console.error('Parsing error:', csvError);
@@ -107,49 +54,6 @@ export default function Home() {
       setData(text as string);
     };
     reader.readAsText(file);
-  };
-
-  const renderChart = () => {
-    if (chartType === 'pie' && chartData.length > 0) {
-      return (
-        <PieChart width={400} height={400}>
-          <Pie
-            dataKey="value"
-            isAnimationActive={false}
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            outerRadius={160}
-            fill="#8884d8"
-            label
-          >
-            {
-              chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))
-            }
-          </Pie>
-        </PieChart>
-      );
-    }
-    return <div>No chart available for the selected data and chart type.</div>;
-  };
-
-  const handleDownload = () => {
-    if (chartRef.current) {
-      const chartInstance = chartRef.current.getEchartsInstance();
-      const dataURL = chartInstance.getDataURL({
-        type: 'png',
-        pixelRatio: 2,
-        backgroundColor: '#141a1f'
-      });
-      const link = document.createElement('a');
-      link.href = dataURL;
-      link.download = 'bar_chart.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
   };
 
   return (
@@ -192,16 +96,7 @@ export default function Home() {
 
       {/* Chart Preview Section */}
       <div className="w-3/4 p-4 flex flex-col items-center justify-start">
-        {renderChart()}
-        {/* eCharts Bar Chart */}
-        <ReactECharts
-          ref={chartRef}
-          option={initialBarChartOption}
-          style={{ height: '500px', width: '100%' }}
-        />
-        <Button onClick={handleDownload}>
-          Export as PNG
-        </Button>
+        <iframe src="/chart" width="100%" height="600px" />
       </div>
     </div>
   );
